@@ -1,22 +1,25 @@
-FROM maven:3.8.3-openjdk-17
-
-# FROM ubuntu:22.04
-# RUN apt update
-# RUN apt install openjdk-17-jdk -y
-# RUN apt install maven
-
-COPY . /opt/
+# Build stage
+FROM maven:3.8.3-openjdk-17 AS build
 
 WORKDIR /opt
 
-COPY application.properties src/main/resources/application.properties
+COPY pom.xml .
+COPY src ./src
+COPY application.properties ./src/main/resources/application.properties
 
-RUN mvn clean package
+RUN mvn clean package -DskipTests
+RUN ls -ltr
 
-WORKDIR /opt/target/
+# Run stage
+FROM openjdk:17-jdk-slim
+
+WORKDIR /opt
+RUN ls -ltr
+COPY --from=build /opt/target/student-registration-backend-0.0.1-SNAPSHOT.jar .
 
 EXPOSE 8080
 
-ENTRYPOINT [ "java", "-jar" ]
-CMD ["student-registration-backend.0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "student-registration-backend-0.0.1-SNAPSHOT.jar"]
+
+
 

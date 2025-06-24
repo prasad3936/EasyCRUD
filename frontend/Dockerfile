@@ -1,13 +1,16 @@
-FROM node:24-alpine
+# Build stage
+FROM node:24-alpine AS build
 
-COPY . /opt/
-
-WORKDIR /opt
-
+WORKDIR /app
+COPY . .
 RUN npm install && npm run build
 
-RUN apk update && apk add apache2 -y
+# Production stage
+FROM httpd:2.4-alpine
+
+# Copy build output to Apache's web root
+COPY --from=build /app/dist/ /usr/local/apache2/htdocs/
 
 EXPOSE 80
 
-ENTRYPOINT ["apachectl", "-D", "FOREGROUND"]
+CMD ["httpd-foreground"]
