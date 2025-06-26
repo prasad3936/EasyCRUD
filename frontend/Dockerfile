@@ -5,11 +5,9 @@ COPY . /opt/
 WORKDIR /opt
 
 RUN npm install && \
-    npm run build
-
-RUN apk update && apk add apache2
-
-RUN rm -rf /var/www/localhost/htdocs/* && \
+    npm run build && \
+    apk update && apk add apache2 && \
+    rm -rf /var/www/localhost/htdocs/* && \
     cp -rf dist/* /var/www/localhost/htdocs/
 
 EXPOSE 80
