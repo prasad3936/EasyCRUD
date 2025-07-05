@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: easycrud-frontend
+  labels:
+    app: easycrud-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: easycrud-frontend
+  template:
+    metadata:
+      labels:
+        app: easycrud-frontend
+    spec:
+      containers:
+        - name: easycrud-frontend
+          image: praszp246/easycrud-f:v1
+          ports:
+            - containerPort: 80
+          env:
+            - name: VITE_API_URL
+              value: http://easycrud-backend-service:8080/api/
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: easycrud-frontend-service
+spec:
+  selector:
+    app: easycrud-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+
