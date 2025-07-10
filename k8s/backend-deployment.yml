@@ -18,20 +18,38 @@ spec:
         - name: easycrud-backend
           image: praszp246/easycrud-b:v1
           ports:
-           - containerPort: 8080
+            - containerPort: 8080
           env:
-           - name: SPRING_DATASOURCE_URL
-             value: jdbc:mariadb://mariadb:3306/student_db
-           - name: DB_HOST
-             value: mariadb  # must match the name of the Service
-           - name: DB_PORT
-             value: "3306"
-           - name: DB_USER
-             value: root
-           - name: DB_PASSWORD
-             value: redhat
-           - name: DB_NAME
-             value: student_db
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: SPRING_DATASOURCE_URL
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: DB_PORT
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: MYSQL_DATABASE
           resources:
             requests:
               memory: "512Mi"

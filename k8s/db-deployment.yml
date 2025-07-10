@@ -27,7 +27,13 @@ spec:
           image: mariadb:latest
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: redhat
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: MYSQL_ROOT_PASSWORD
             - name: MYSQL_DATABASE
-              value: student_db
+              valueFrom:
+                secretKeyRef:
+                  name: my-secret
+                  key: MYSQL_DATABASE
 
