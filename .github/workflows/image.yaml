@@ -154,13 +154,13 @@ jobs:
         with:
           fetch-depth: 0  # Needed for rebase
 
-      - name: Update container images in manifests
+      - name: Update container images in Pods/Deployments only
         run: |
-          echo "Updating frontend image"
-          yq -i ".spec.template.spec.containers[0].image = \"${{ env.FRONTEND_IMAGE }}:${{ github.sha }}\"" yaml/frontend-pod.yaml
+          echo "Updating frontend image in Pods/Deployments"
+          yq -i 'select(.kind == "Pod" or .kind == "Deployment") | .spec.template.spec.containers[0].image = "'${{ env.FRONTEND_IMAGE }}:${{ github.sha }}'"' yaml/frontend-pod.yaml
 
-          echo "Updating backend image"
-          yq -i ".spec.template.spec.containers[0].image = \"${{ env.BACKEND_IMAGE }}:${{ github.sha }}\"" yaml/backend-pod.yaml
+          echo "Updating backend image in Pods/Deployments"
+          yq -i 'select(.kind == "Pod" or .kind == "Deployment") | .spec.template.spec.containers[0].image = "'${{ env.BACKEND_IMAGE }}:${{ github.sha }}'"' yaml/backend-pod.yaml
 
       - name: Commit and push manifest updates
         run: |
