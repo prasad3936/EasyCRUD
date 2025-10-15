@@ -13,22 +13,4 @@ spec:
   template:
     spec:
       containers:
-        - image: ghcr.io/prasad3936/easyfront:f7aa3a805b74aca056ceb2f92b88d18a1eeb1b93
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: frontend-svc
-spec:
-  ports:
-    - name: http
-      protocol: TCP
-      port: 8088
-      targetPort: 80
-  selector:
-    app: frontend-app
-  type: ClusterIP
-  template:
-    spec:
-      containers:
-        - image: ghcr.io/prasad3936/easyfront:f7aa3a805b74aca056ceb2f92b88d18a1eeb1b93
+        - image: ghcr.io/prasad3936/easyfront:2d4de1e0111ea149bda5beca01721cce09fc849e
