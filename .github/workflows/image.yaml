@@ -11,9 +11,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/${{ github.repository }}
   IMAGE_TAG: ${{ github.sha }}
-  FULL_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  RAW_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
 
 jobs:
   build-and-push:
@@ -35,13 +34,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
+      - name: Build Docker image with lowercase name
         run: |
-          docker build -t $FULL_IMAGE ./backend
+          IMAGE=$(echo "${RAW_IMAGE}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          docker build -t $IMAGE ./backend
 
       - name: Push Docker image
         run: |
-          docker push $FULL_IMAGE
+          docker push $IMAGE
 
   update-manifests:
     name: Update Kubernetes Manifests with Full Image Name
@@ -54,7 +55,7 @@ jobs:
 
       - name: Replace image name in manifests
         run: |
-          find ./yaml -type f -name '*.yaml' -exec sed -i "s|image: .*|image: $FULL_IMAGE|g" {} \;
+          find ./yaml -type f -name '*.yaml' -exec sed -i "s|image: .*|image: $IMAGE|g" {} \;
 
       - name: Commit updated manifests (excluding README files)
         run: |
@@ -62,5 +63,5 @@ jobs:
           git config user.email "github-actions@github.com"
           git add ./yaml
           git reset README.md README.markdown README.txt || true
-          git commit -m "Update image name to $FULL_IMAGE"
+          git commit -m "Update image name to $IMAGE"
           git push
