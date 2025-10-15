@@ -1,8 +1,3 @@
-Absolutely PRASAD! Here's a complete and polished `README.md` file in Markdown format that includes your `kubectl apply` and `port-forward` commands, along with structure, usage, and notes:
-
----
-
-```markdown
 # 📦 Kubernetes Full-Stack Deployment
 
 This repository contains Kubernetes manifests to deploy a full-stack application with separate frontend and backend services.
