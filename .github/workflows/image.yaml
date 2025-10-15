@@ -26,7 +26,7 @@ permissions:
   security-events: write
 
 jobs:
-  code-analysis:
+    code-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
 
@@ -39,8 +39,21 @@ jobs:
         with:
           languages: javascript, java
 
+      # 🧩 Build Java backend for CodeQL to analyze
+      - name: Build backend (Maven)
+        working-directory: ./backend
+        run: |
+          chmod +x mvnw
+          ./mvnw clean compile -DskipTests
+
+      # Optional: Build frontend JS dependencies for JS scan context
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+
 
   build-scan-push:
     name: Build, Scan, Push, and Email Reports
