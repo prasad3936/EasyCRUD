@@ -6,17 +6,16 @@ on:
       - kind
     paths-ignore:
       - '**/README.md'
-      - 'yaml/**'
+      - '**/*.yaml'
   pull_request:
     branches:
       - kind
     paths-ignore:
       - '**/README.md'
-      - 'yaml/**'
+      - '**/*.yaml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/easyfront
   BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/easyback
 
@@ -26,12 +25,11 @@ permissions:
   security-events: write
 
 jobs:
-  code-analysis:
+  codeql-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
@@ -39,28 +37,26 @@ jobs:
         with:
           languages: javascript, java
 
-      # ✅ Build Java backend for CodeQL
-      - name: Build backend (Maven)
+      - name: Build backend for CodeQL
         working-directory: ./backend
         run: |
           chmod +x mvnw || true
           ./mvnw clean compile -DskipTests
 
-      # ✅ Install frontend deps for JS analysis
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
 
-      - name: Perform CodeQL Analysis
+      - name: Run CodeQL analysis
         uses: github/codeql-action/analyze@v3
 
   build-scan-push:
-    name: Build, Scan, Push, and Email Reports
+    name: Build → Scan → Push → Email
     runs-on: ubuntu-latest
-    needs: code-analysis
+    needs: codeql-analysis
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -73,60 +69,46 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # === BACKEND ===
-      - name: Build Backend Image
-        run: |
-          docker build -t $BACKEND_IMAGE:${{ github.sha }} ./backend
-          docker save $BACKEND_IMAGE:${{ github.sha }} -o backend-image.tar
+      # ---- BACKEND ----
+      - name: Build backend image
+        run: docker build -t $BACKEND_IMAGE:${{ github.sha }} ./backend
 
-      - name: Scan Backend Image with Trivy
+      - name: Trivy scan backend image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          format: 'table'
+          format: table
           output: trivy-backend-report.txt
           exit-code: '0'
           ignore-unfixed: true
-          vuln-type: 'os,library'
 
-      - name: Push Backend Image
+      - name: Push backend image
         run: |
           docker push $BACKEND_IMAGE:${{ github.sha }}
           docker tag $BACKEND_IMAGE:${{ github.sha }} $BACKEND_IMAGE:latest
           docker push $BACKEND_IMAGE:latest
 
-      # === FRONTEND ===
-      - name: Build Frontend Image
-        run: |
-          docker build -t $FRONTEND_IMAGE:${{ github.sha }} ./frontend
-          docker save $FRONTEND_IMAGE:${{ github.sha }} -o frontend-image.tar
+      # ---- FRONTEND ----
+      - name: Build frontend image
+        run: docker build -t $FRONTEND_IMAGE:${{ github.sha }} ./frontend
 
-      - name: Scan Frontend Image with Trivy
+      - name: Trivy scan frontend image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          format: 'table'
+          format: table
           output: trivy-frontend-report.txt
           exit-code: '0'
           ignore-unfixed: true
-          vuln-type: 'os,library'
 
-      - name: Push Frontend Image
+      - name: Push frontend image
         run: |
           docker push $FRONTEND_IMAGE:${{ github.sha }}
           docker tag $FRONTEND_IMAGE:${{ github.sha }} $FRONTEND_IMAGE:latest
           docker push $FRONTEND_IMAGE:latest
 
-      # === ARTIFACTS ===
-      - name: Upload Docker Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: built-images
-          path: |
-            backend-image.tar
-            frontend-image.tar
-
-      - name: Upload Trivy Reports
+      # ---- Upload Trivy Reports ----
+      - name: Upload Trivy reports
         uses: actions/upload-artifact@v4
         with:
           name: trivy-reports
@@ -134,7 +116,7 @@ jobs:
             trivy-backend-report.txt
             trivy-frontend-report.txt
 
-      # === EMAIL REPORTS ===
+      # ---- Email Reports ----
       - name: Email Trivy Reports
         uses: dawidd6/action-send-mail@v3
         with:
@@ -142,21 +124,21 @@ jobs:
           server_port: 587
           username: ${{ secrets.GMAIL_USER }}
           password: ${{ secrets.GMAIL_PASS }}
-          subject: "Trivy Scan Reports for ${{ github.repository }} - ${{ github.sha }}"
+          subject: "Trivy Security Scan - ${{ github.repository }} (${{ github.sha }})"
           to: ${{ secrets.REPORT_RECIPIENT }}
           from: "CI Pipeline <${{ secrets.GMAIL_USER }}>"
           body: |
             Hello,
 
-            Attached are the Trivy vulnerability scan reports for:
-            - easyback (backend)
-            - easyfront (frontend)
+            Attached are Trivy vulnerability reports for:
+            - Backend: $BACKEND_IMAGE:${{ github.sha }}
+            - Frontend: $FRONTEND_IMAGE:${{ github.sha }}
 
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
 
             Regards,
-            GitHub Actions CI/CD Pipeline
+            GitHub Actions CI/CD
           attachments: |
             trivy-backend-report.txt
             trivy-frontend-report.txt
@@ -167,18 +149,21 @@ jobs:
     needs: build-scan-push
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Update image tags in manifests
+      - name: Update container image lines
         run: |
-          sed -i "s|image: .*easyfront:.*|image: ${FRONTEND_IMAGE}:${{ github.sha }}|g" yaml/frontend-pod.yaml
-          sed -i "s|image: .*easyback:.*|image: ${BACKEND_IMAGE}:${{ github.sha }}|g" yaml/backend-pod.yaml
+          echo "Updating yaml/frontend-pod.yaml"
+          yq -i ".spec.template.spec.containers[0].image = \"${FRONTEND_IMAGE}:${{ github.sha }}\"" yaml/frontend-pod.yaml
 
-      - name: Commit and push manifest updates
+          echo "Updating yaml/backend-pod.yaml"
+          yq -i ".spec.template.spec.containers[0].image = \"${BACKEND_IMAGE}:${{ github.sha }}\"" yaml/backend-pod.yaml
+
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add yaml/frontend-pod.yaml yaml/backend-pod.yaml
-          git commit -m "Update manifests with latest images (${{ github.sha }})" || echo "No changes to commit"
+          git commit -m "Update manifests: new images (${{ github.sha }})" || echo "No changes to commit"
           git push origin kind
