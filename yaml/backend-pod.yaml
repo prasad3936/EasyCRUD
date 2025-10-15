@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
     - name: backend-app
-      image: praszp246/testback:v1
+      image: 
       ports:
         - containerPort: 8080
 
