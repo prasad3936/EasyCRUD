@@ -7,7 +7,7 @@ metadata:
 spec:
     containers:
         - name: mysql-container
-          image: 
+          image: mariadb:latest
           ports:
             - containerPort: 3306
           env:
