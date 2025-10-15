@@ -151,19 +151,22 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for rebase
 
-      - name: Update container image lines
+      - name: Update container images in manifests
         run: |
-          echo "Updating yaml/frontend-pod.yaml"
-          yq -i ".spec.template.spec.containers[0].image = \"${FRONTEND_IMAGE}:${{ github.sha }}\"" yaml/frontend-pod.yaml
+          echo "Updating frontend image"
+          yq -i ".spec.template.spec.containers[0].image = \"${{ env.FRONTEND_IMAGE }}:${{ github.sha }}\"" yaml/frontend-pod.yaml
 
-          echo "Updating yaml/backend-pod.yaml"
-          yq -i ".spec.template.spec.containers[0].image = \"${BACKEND_IMAGE}:${{ github.sha }}\"" yaml/backend-pod.yaml
+          echo "Updating backend image"
+          yq -i ".spec.template.spec.containers[0].image = \"${{ env.BACKEND_IMAGE }}:${{ github.sha }}\"" yaml/backend-pod.yaml
 
-      - name: Commit and push changes
+      - name: Commit and push manifest updates
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add yaml/frontend-pod.yaml yaml/backend-pod.yaml
-          git commit -m "Update manifests: new images (${{ github.sha }})" || echo "No changes to commit"
+          git commit -m "Update manifests with new images (${{ github.sha }})" || echo "No changes to commit"
+          git pull --rebase origin kind
           git push origin kind
