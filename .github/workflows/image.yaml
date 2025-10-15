@@ -26,7 +26,7 @@ permissions:
   security-events: write
 
 jobs:
-    code-analysis:
+  code-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
 
@@ -39,21 +39,20 @@ jobs:
         with:
           languages: javascript, java
 
-      # 🧩 Build Java backend for CodeQL to analyze
+      # ✅ Build Java backend for CodeQL
       - name: Build backend (Maven)
         working-directory: ./backend
         run: |
-          chmod +x mvnw
+          chmod +x mvnw || true
           ./mvnw clean compile -DskipTests
 
-      # Optional: Build frontend JS dependencies for JS scan context
+      # ✅ Install frontend deps for JS analysis
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-
 
   build-scan-push:
     name: Build, Scan, Push, and Email Reports
@@ -118,7 +117,8 @@ jobs:
           docker tag $FRONTEND_IMAGE:${{ github.sha }} $FRONTEND_IMAGE:latest
           docker push $FRONTEND_IMAGE:latest
 
-      - name: Upload build artifacts
+      # === ARTIFACTS ===
+      - name: Upload Docker Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: built-images
@@ -134,7 +134,7 @@ jobs:
             trivy-backend-report.txt
             trivy-frontend-report.txt
 
-      # === EMAIL TRIVY REPORTS ===
+      # === EMAIL REPORTS ===
       - name: Email Trivy Reports
         uses: dawidd6/action-send-mail@v3
         with:
@@ -147,14 +147,14 @@ jobs:
           from: "CI Pipeline <${{ secrets.GMAIL_USER }}>"
           body: |
             Hello,
-            
-            Attached are the Trivy vulnerability scan reports for both images:
-            - easyback
-            - easyfront
-            
+
+            Attached are the Trivy vulnerability scan reports for:
+            - easyback (backend)
+            - easyfront (frontend)
+
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
-            
+
             Regards,
             GitHub Actions CI/CD Pipeline
           attachments: |
