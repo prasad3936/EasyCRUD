@@ -7,9 +7,13 @@ metadata:
 spec:
   containers:
     - name: frontend-app
-      image: 
+      image:
       ports:
         - containerPort: 80
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/prasad3936/easyfront:f7aa3a805b74aca056ceb2f92b88d18a1eeb1b93
 ---
 kind: Service
 apiVersion: v1
@@ -24,3 +28,7 @@ spec:
   selector:
     app: frontend-app
   type: ClusterIP
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/prasad3936/easyfront:f7aa3a805b74aca056ceb2f92b88d18a1eeb1b93
