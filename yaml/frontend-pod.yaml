@@ -13,4 +13,4 @@ spec:
   template:
     spec:
       containers:
-        - image: ghcr.io/prasad3936/easyfront:dceb5d22eb8ebcbe1fdf961f90363e625ed7ff87
+        - image: ghcr.io/prasad3936/easyfront:c725e44e60b0be04ae7b57d208d59e1148e0970f
