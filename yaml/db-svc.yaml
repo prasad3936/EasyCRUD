@@ -4,7 +4,7 @@ metadata:
     name: db-svc
 spec:
     selector:
-        app: student-app-db
+        app: mydb
     ports:
       -  port: 3306
          targetPort: 3306
