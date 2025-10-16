@@ -1,3 +1,24 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa
+  labels:
+    app: hp
+spec:
+  scaleTargetRef:
+    apiVersion: v1
+    kind: Deployment
+    name: backend
+  minReplicas: 3
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +38,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/prasad3936/easyback:c725e44e60b0be04ae7b57d208d59e1148e0970f
+          image: ghcr.io/prasad3936/easyback:dceb5d22eb8ebcbe1fdf961f90363e625ed7ff87
           ports:
             - containerPort: 8080
           resources:
@@ -27,3 +48,15 @@ spec:
             limits:
               cpu: 200m
               memory: 500M
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: back
