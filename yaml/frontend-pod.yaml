@@ -10,3 +10,7 @@ spec:
       image: praszp246/testfront:v2
       ports:
         - containerPort: 80
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/prasad3936/easyfront:dceb5d22eb8ebcbe1fdf961f90363e625ed7ff87

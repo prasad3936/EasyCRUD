@@ -10,3 +10,7 @@ spec:
       image: praszp246/testback:v1
       ports:
         - containerPort: 8080
+  template:
+    spec:
+      containers:
+        - image: ghcr.io/prasad3936/easyback:dceb5d22eb8ebcbe1fdf961f90363e625ed7ff87
