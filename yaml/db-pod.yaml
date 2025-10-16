@@ -1,30 +1,41 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-    name: db-pod
-    labels:
-        app: easy-crud-db
+  name: db-sts
+  labels:
+    app: student-app-db
 spec:
-    containers:
-        - name: mysql-container
+  selector:
+    matchLabels:
+      app: student-app-db
+  serviceName: db-svc
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: student-app-db
+    spec:
+      containers:
+        - name: student-app-container
           image: mariadb:latest
-          ports:
-            - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: cloudblitz
+              valueFrom:
+                secretKeyRef:
+                  name: student-app-credentials
+                  key: DB_PASS
             - name: MYSQL_DATABASE
-              value: student_db
----
-apiVersion: v1
-kind: Service
-metadata:
-    name: db-svc
-spec:
-    selector:
-        app: easy-crud-db
-    ports:
-      -  port: 3306
-         targetPort: 3306
-         protocol: TCP
-         name: mysql
+              valueFrom:
+                secretKeyRef:
+                  name: student-app-credentials
+                  key: DB_NAME
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: student-db-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: student-db-volume
+          persistentVolumeClaim:
+            claimName: my-pvc
