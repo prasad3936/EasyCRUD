@@ -12,15 +12,11 @@ spec:
   storageClassName: manual
   local:
     path: /mnt/data
-  nodeaffinity:
+  nodeAffinity:
     required:
       nodeSelectorTerms:
         - matchExpressions:
-            - {
-                key: app.kubernetes.io/hostname,
-                operator: In,
-                value: ["easycrud-control-plane"],
-              }
+          - {key: app.kubernetes.io/hostname, operator: In, values: ["easycrud-control-plane"]}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
