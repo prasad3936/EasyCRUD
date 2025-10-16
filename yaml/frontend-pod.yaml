@@ -13,29 +13,10 @@ spec:
     spec:
       containers:
         - name: myfrontendapp
-          image: ghcr.io/prasad3936/easyfront:dceb5d22eb8ebcbe1fdf961f90363e625ed7ff87
+          image: ghcr.io/prasad3936/easyfront:13572944a2fdb02911a9e94cf539879975e42d4b
           resources:
             limits:
               memory: "128Mi"
               cpu: "500m"
           ports:
             - containerPort: 80
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: frontend
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
