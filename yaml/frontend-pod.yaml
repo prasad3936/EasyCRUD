@@ -7,10 +7,6 @@ metadata:
 spec:
   containers:
     - name: frontend-app
-      image:
+      image: praszp246/testfront:v2
       ports:
         - containerPort: 80
-  template:
-    spec:
-      containers:
-        - image: ghcr.io/prasad3936/easyfront:b9d1c61d5a543400b5fe97e3aefdbb3926e977d7
