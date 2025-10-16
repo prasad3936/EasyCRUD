@@ -7,10 +7,6 @@ metadata:
 spec:
   containers:
     - name: backend-app
-      image:
+      image: praszp246/testback:v1
       ports:
         - containerPort: 8080
-  template:
-    spec:
-      containers:
-        - image: ghcr.io/prasad3936/easyback:b9d1c61d5a543400b5fe97e3aefdbb3926e977d7
