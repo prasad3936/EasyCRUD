@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/prasad3936/easyback:ad7f9f2795729715f02109391255aa406afe11bd
+          image: ghcr.io/prasad3936/easyback:8e4c1962a416645026a980d195df5904aa614f45
           ports:
             - containerPort: 8080
           resources:

@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: myfrontendapp
-          image: ghcr.io/prasad3936/easyfront:ad7f9f2795729715f02109391255aa406afe11bd
+          image: ghcr.io/prasad3936/easyfront:8e4c1962a416645026a980d195df5904aa614f45
           resources:
             limits:
               memory: "128Mi"
