@@ -4,7 +4,7 @@ metadata:
   name: backend-svc
 spec:
   selector:
-    app: backpod
+    app: back
   ports:
   - port: 8080
     targetPort: 8080
