@@ -23,7 +23,7 @@ spec:
             - name: db-vol
               mountPath: /var/lib/mysql
           env:
-            - name: DB_USER
+            - name: MARIADB_USER
               valueFrom:
                 secretKeyRef:
                   name: secret
@@ -33,7 +33,7 @@ spec:
                 secretKeyRef:
                   name: secret
                   key: MARIADB_ROOT_PASSWORD
-            - name: DB_NAME
+            - name: MARIADB_DATABASE
               value: student_db
       volumes:
         - name: db-vol
