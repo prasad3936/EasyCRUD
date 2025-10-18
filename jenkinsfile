@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
     stages {
         stage('PULL') {
             steps {
@@ -10,7 +13,7 @@ pipeline {
         stage('FRONTEND-DOCKER-BUILD') {
             steps {
                 dir('frontend') {
-                    sh 'docker build . -t praszp246/easy-frontend:latest'
+                    sh "docker build . -t praszp246/easy-frontend:${IMAGE_TAG}"
                 }
             }
         }
@@ -18,7 +21,7 @@ pipeline {
         stage('BACKEND-DOCKER-BUILD') {
             steps {
                 dir('backend') {
-                    sh 'docker build . -t praszp246/easy-backend:latest'
+                    sh "docker build . -t praszp246/easy-backend:${IMAGE_TAG}"
                 }
             }
         }
@@ -28,8 +31,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: '3f6db939-f6bb-496f-87d2-b13ca051c951', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                       echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push praszp246/easy-frontend:latest
-                      docker push praszp246/easy-backend:latest
+                      docker push praszp246/easy-frontend:${IMAGE_TAG}
+                      docker push praszp246/easy-backend:${IMAGE_TAG}
                       docker logout
                     '''
                 }
@@ -39,15 +42,30 @@ pipeline {
         stage('DOCKER-CLEAN') {
             steps {
                 sh '''
-                  docker rmi -f praszp246/easy-frontend:latest || true
-                  docker rmi -f praszp246/easy-backend:latest || true
+                  docker rmi -f praszp246/easy-frontend:${IMAGE_TAG} || true
+                  docker rmi -f praszp246/easy-backend:${IMAGE_TAG} || true
                 '''
             }
         }
-
-        stage('DEPLOY') {
+        stage('IMAGE TAG UPDATE') {
             steps {
-                sh 'ls -ls && export KUBECONFIG=/var/lib/jenkins/.kube/config && kubectl apply -f yaml/'
+                sh '''
+                  sed -i "s/latest/${IMAGE_TAG}/g" yaml/frontend-pod.yaml
+                  sed -i "s/latest/${IMAGE_TAG}/g" yaml/backend-pod.yaml
+                '''
+            }
+        }
+        stage('GIT PUSH UPDATED TAGS') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh '''
+                      git config --global user.email "${GIT_USER}@users.noreply.github.com"
+                      git config --global user.name "${GIT_USER}"
+                      git add yaml/frontend-pod.yaml yaml/backend-pod.yaml
+                      git commit -m "Update image tags to ${IMAGE_TAG}" || true
+                      git push https://${GIT_USER}:${GIT_PASS}@github.com/prasad3936/easycrud.git kind
+                    '''
+                }
             }
         }
     }
