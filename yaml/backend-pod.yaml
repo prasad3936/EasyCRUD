@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: praszp246/easy-backend:latest
+          image: praszp246/easy-backend:26
           ports:
             - containerPort: 8080
           resources:

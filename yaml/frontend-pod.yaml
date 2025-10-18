@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: myfrontendapp
-          image: praszp246/easy-frontend:latest
+          image: praszp246/easy-frontend:26
           resources:
             limits:
               memory: "128Mi"
