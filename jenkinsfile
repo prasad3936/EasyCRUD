@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    stages {
+        stage('PULL'){
+            steps{
+                git branch: 'devops', url: 'https://github.com/prasad3936/easycrud.git'
+            }
+        }
+        stage('FRONTEND-DOCKER-BUILD'){
+            steps{
+                sh '''cd frontend
+                    docker build . -t praszp246/easy-frontend:latest'''
+            }
+        }
+        stage('BACKEND-DOCKER-BUILD'){
+            steps{
+                sh '''cd backend
+                    docker build . -t praszp246/easy-backend:latest'''
+            }
+        }
+        stage('DOCKER-PUSH'){
+            steps{
+                sh '''docker push praszp246/easy-frontend:latest
+                    docker push praszp246/easy-backend:latest'''
+            }
+        }
+        stage('DOCKER-CLEAN'){
+            steps{
+                sh '''docker rmi -f praszp246/easy-frontend:latest
+                    docker rmi -f praszp246/easy-backend:latest'''
+            }
+        }
+        stage('DEPLOY'){
+            steps{
+                sh 'kubectl apply -f yaml/'
+            }
+        }
+    }
+}
